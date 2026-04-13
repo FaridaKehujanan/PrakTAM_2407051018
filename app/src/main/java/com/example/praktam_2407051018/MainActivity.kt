@@ -6,24 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,39 +39,101 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MonsterListScreen() {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF1A1A2E))
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .statusBarsPadding(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
-        Text(
-            text = "⚔️ Monster Hunter",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFE94560),
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        Text(
-            text = "${MonsterList.listMonster.size} monster ditemukan",
-            fontSize = 14.sp,
-            color = Color(0xFFAAAAAA),
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
 
-        // Monster Cards
-        MonsterList.listMonster.forEach { monster ->
-            MonsterCard(monster = monster)
+        // HEADER + LAZYROW
+        item {
+            Text(
+                text = "⚔️ Monster Hunter",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFE94560)
+            )
+
+            Text(
+                text = "${MonsterList.listMonster.size} monster ditemukan",
+                fontSize = 14.sp,
+                color = Color(0xFFAAAAAA),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "🔥 Monster Populer",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(MonsterList.listMonster) { monster ->
+                    MonsterRowItem(monster)
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "📜 Semua Monster",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        // LIST UTAMA (VERTICAL)
+        items(MonsterList.listMonster) { monster ->
+            MonsterCard(monster = monster)
+        }
+    }
+}
+
+@Composable
+fun MonsterRowItem(monster: Monster) {
+    Card(
+        modifier = Modifier.width(140.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF16213E))
+    ) {
+        Column {
+            Image(
+                painter = painterResource(id = monster.gambar),
+                contentDescription = monster.nama,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(
+                    text = monster.nama,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Text(
+                    text = "LVL ${monster.level}",
+                    fontSize = 12.sp,
+                    color = getLevelColor(monster.level)
+                )
+            }
         }
     }
 }
 
 @Composable
 fun MonsterCard(monster: Monster) {
-    // State untuk toggle favorit — setiap card punya state-nya sendiri
     var isFavorite by remember { mutableStateOf(false) }
 
     Card(
@@ -91,7 +144,6 @@ fun MonsterCard(monster: Monster) {
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
 
-            // Box: menumpuk Image + IconButton favorit
             Box {
                 Image(
                     painter = painterResource(id = monster.gambar),
@@ -103,7 +155,6 @@ fun MonsterCard(monster: Monster) {
                     contentScale = ContentScale.Crop
                 )
 
-
                 IconButton(
                     onClick = { isFavorite = !isFavorite },
                     modifier = Modifier
@@ -111,7 +162,10 @@ fun MonsterCard(monster: Monster) {
                         .padding(8.dp)
                 ) {
                     Icon(
-                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        imageVector = if (isFavorite)
+                            Icons.Filled.Favorite
+                        else
+                            Icons.Outlined.FavoriteBorder,
                         contentDescription = "Favorite Icon",
                         tint = if (isFavorite) Color.Red else Color.White,
                         modifier = Modifier.size(28.dp)
@@ -121,7 +175,6 @@ fun MonsterCard(monster: Monster) {
 
             Column(modifier = Modifier.padding(16.dp)) {
 
-                // Nama Monster
                 Text(
                     text = monster.nama,
                     fontSize = 22.sp,
@@ -131,7 +184,6 @@ fun MonsterCard(monster: Monster) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Lokasi
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = "📍", fontSize = 14.sp)
                     Spacer(modifier = Modifier.width(4.dp))
@@ -144,7 +196,6 @@ fun MonsterCard(monster: Monster) {
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Level Badge
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -171,7 +222,6 @@ fun MonsterCard(monster: Monster) {
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Tombol Lihat Detail
                 Button(
                     onClick = { },
                     modifier = Modifier.fillMaxWidth(),
