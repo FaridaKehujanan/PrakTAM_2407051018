@@ -9,12 +9,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,6 +80,9 @@ fun MonsterListScreen() {
 
 @Composable
 fun MonsterCard(monster: Monster) {
+    // State untuk toggle favorit — setiap card punya state-nya sendiri
+    var isFavorite by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -79,16 +91,33 @@ fun MonsterCard(monster: Monster) {
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
 
-            // Monster Image
-            Image(
-                painter = painterResource(id = monster.gambar),
-                contentDescription = monster.nama,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                contentScale = ContentScale.Crop
-            )
+            // Box: menumpuk Image + IconButton favorit
+            Box {
+                Image(
+                    painter = painterResource(id = monster.gambar),
+                    contentDescription = monster.nama,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+
+                IconButton(
+                    onClick = { isFavorite = !isFavorite },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Favorite Icon",
+                        tint = if (isFavorite) Color.Red else Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
 
             Column(modifier = Modifier.padding(16.dp)) {
 
@@ -142,7 +171,7 @@ fun MonsterCard(monster: Monster) {
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Tombol Lawan Monster
+                // Tombol Lihat Detail
                 Button(
                     onClick = { },
                     modifier = Modifier.fillMaxWidth(),
@@ -166,10 +195,10 @@ fun MonsterCard(monster: Monster) {
 
 fun getLevelColor(level: Int): Color {
     return when {
-        level < 10 -> Color(0xFF4CAF50)   // hijau - mudah
-        level < 30 -> Color(0xFF2196F3)   // biru - normal
-        level < 50 -> Color(0xFFFF9800)   // oranye - sulit
-        else -> Color(0xFFE94560)          // merah - sangat sulit
+        level < 10 -> Color(0xFF4CAF50)
+        level < 30 -> Color(0xFF2196F3)
+        level < 50 -> Color(0xFFFF9800)
+        else -> Color(0xFFE94560)
     }
 }
 
