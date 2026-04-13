@@ -2,9 +2,8 @@ package com.example.praktam_2407051018.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryColor = Color(0xFFE94560)
-val SecondaryColor = Color(0xFF0F3460)
-val BackgroundColor = Color(0xFF1A1A2E)
-val SurfaceColor = Color(0xFF16213E)
-val OnPrimaryColor = Color(0xFFFFFFFF)
-val TextSecondary = Color(0xFFAAAAAA)
+val PrimaryColor = Color(0xFF3F51B5)
+val SecondaryColor = Color(0xFF757575)
+val BackgroundColor = Color(0xFFF5F5F5)
+val SurfaceColor = Color(0xFFFFFFFF)
+val OnPrimaryColor = Color.White

@@ -6,33 +6,30 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.praktam_2407051018.model.Monster
 import com.example.praktam_2407051018.model.MonsterList
+import com.example.praktam_2407051018.ui.theme.PraktamTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MonsterListScreen()
+            PraktamTheme {
+                MonsterListScreen()
+            }
         }
     }
 }
@@ -42,34 +39,31 @@ fun MonsterListScreen() {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A1A2E))
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // HEADER + LAZYROW
         item {
             Text(
                 text = "⚔️ Monster Hunter",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFE94560)
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary
             )
 
             Text(
                 text = "${MonsterList.listMonster.size} monster ditemukan",
-                fontSize = 14.sp,
-                color = Color(0xFFAAAAAA),
-                modifier = Modifier.padding(bottom = 16.dp)
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "🔥 Monster Populer",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 8.dp)
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             LazyRow(
@@ -84,15 +78,13 @@ fun MonsterListScreen() {
 
             Text(
                 text = "📜 Semua Monster",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
 
-        // LIST UTAMA (VERTICAL)
         items(MonsterList.listMonster) { monster ->
-            MonsterCard(monster = monster)
+            MonsterCard(monster)
         }
     }
 }
@@ -102,7 +94,9 @@ fun MonsterRowItem(monster: Monster) {
     Card(
         modifier = Modifier.width(140.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF16213E))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column {
             Image(
@@ -117,15 +111,14 @@ fun MonsterRowItem(monster: Monster) {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
                     text = monster.nama,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
                     text = "LVL ${monster.level}",
-                    fontSize = 12.sp,
-                    color = getLevelColor(monster.level)
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -139,10 +132,12 @@ fun MonsterCard(monster: Monster) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF16213E)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column {
 
             Box {
                 Image(
@@ -166,9 +161,11 @@ fun MonsterCard(monster: Monster) {
                             Icons.Filled.Favorite
                         else
                             Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite Icon",
-                        tint = if (isFavorite) Color.Red else Color.White,
-                        modifier = Modifier.size(28.dp)
+                        contentDescription = null,
+                        tint = if (isFavorite)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -177,65 +174,39 @@ fun MonsterCard(monster: Monster) {
 
                 Text(
                     text = monster.nama,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "📍", fontSize = 14.sp)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = monster.lokasi,
-                        fontSize = 14.sp,
-                        color = Color(0xFFAAAAAA)
-                    )
-                }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = getLevelColor(monster.level),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "LVL ${monster.level}",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = getLevelLabel(monster.level),
-                        fontSize = 13.sp,
-                        color = getLevelColor(monster.level)
-                    )
-                }
+                Text(
+                    text = "📍 ${monster.lokasi}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "Level ${monster.level}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
                     onClick = { },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE94560)
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Text(
-                        text = "🔍 Lihat Detail",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        text = "Lihat Detail",
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -243,27 +214,10 @@ fun MonsterCard(monster: Monster) {
     }
 }
 
-fun getLevelColor(level: Int): Color {
-    return when {
-        level < 10 -> Color(0xFF4CAF50)
-        level < 30 -> Color(0xFF2196F3)
-        level < 50 -> Color(0xFFFF9800)
-        else -> Color(0xFFE94560)
-    }
-}
-
-fun getLevelLabel(level: Int): String {
-    return when {
-        level < 10 -> "Mudah"
-        level < 30 -> "Normal"
-        level < 50 -> "Sulit"
-        else -> "Sangat Sulit"
-    }
-}
-
-
 @Preview(showBackground = true)
 @Composable
-fun MonsterListPreview() {
-    MonsterListScreen()
+fun PreviewApp() {
+    PraktamTheme {
+        MonsterListScreen()
+    }
 }
