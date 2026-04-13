@@ -261,6 +261,7 @@ fun getLevelLabel(level: Int): String {
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun MonsterListPreview() {
