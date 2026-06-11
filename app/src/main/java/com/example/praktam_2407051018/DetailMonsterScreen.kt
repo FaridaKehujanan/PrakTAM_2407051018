@@ -1,6 +1,6 @@
 package com.example.praktam_2407051018
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,15 +15,22 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.praktam_2407051018.model.Monster
+import coil.compose.AsyncImage
+import com.example.praktam_2407051018.data.model.MonsterApiModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailMonsterScreen(monster: Monster, navController: NavController) {
+fun DetailMonsterScreen(
+    monster: MonsterApiModel, 
+    serpImageUrl: String?,
+    navController: NavController
+) {
     var isFavorite by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
@@ -31,10 +38,11 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     if (showConfirmDialog) {
+// ... (rest of the code unchanged)
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
             title = { Text("Konfirmasi Berburu") },
-            text = { Text("Apakah Anda yakin ingin mulai berburu ${monster.nama}? Pastikan persiapan sudah matang!") },
+            text = { Text("Apakah Anda yakin ingin mulai berburu ${monster.name}? Pastikan persiapan sudah matang!") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -43,7 +51,7 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
                             isLoading = true
                             delay(2500)
                             isLoading = false
-                            snackbarHostState.showSnackbar("Berhasil! Anda telah mengalahkan ${monster.nama}")
+                            snackbarHostState.showSnackbar("Berhasil! Anda telah mengalahkan ${monster.name}")
                         }
                     }
                 ) {
@@ -61,7 +69,7 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = monster.nama) },
+                title = { Text(text = monster.name) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -86,14 +94,16 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
                     .verticalScroll(rememberScrollState())
             ) {
                 Box {
-                    Image(
-                        painter = painterResource(id = monster.gambar),
-                        contentDescription = monster.nama,
+                    AsyncImage(
+                        model = serpImageUrl ?: monster.imageUrl,
+                        contentDescription = monster.name,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(280.dp)
-                            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
-                        contentScale = ContentScale.Crop
+                            .height(300.dp)
+                            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentScale = ContentScale.Crop,
+                        error = painterResource(id = android.R.drawable.ic_menu_report_image)
                     )
                     IconButton(
                         onClick = { isFavorite = !isFavorite },
@@ -106,15 +116,16 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
                             else Icons.Outlined.FavoriteBorder,
                             contentDescription = "Favorite",
                             tint = if (isFavorite) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
-                        text = monster.nama,
-                        style = MaterialTheme.typography.titleLarge,
+                        text = monster.name,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
 
@@ -123,60 +134,50 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "📍 Lokasi",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = monster.lokasi,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = "⚔️ Level",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = monster.level.toString(),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            InfoRow(label = "📍 Lokasi", value = monster.mapName ?: "Unknown")
+                            Spacer(modifier = Modifier.height(16.dp))
+                            InfoRow(label = "⚔️ Level", value = "Level ${monster.level ?: "?"}")
+                            Spacer(modifier = Modifier.height(16.dp))
+                            InfoRow(label = "🏷️ Tipe", value = monster.type ?: "Normal")
+                            if (!monster.mode.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                InfoRow(label = "🛡️ Mode", value = monster.mode)
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
                         onClick = { showConfirmDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
                         enabled = !isLoading,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(24.dp),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Sedang Bertarung...")
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(text = "Sedang Bertarung...", fontSize = 16.sp)
                         } else {
                             Text(
                                 text = "Lawan Monster!",
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -190,5 +191,22 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
                     .padding(bottom = 16.dp)
             )
         }
+    }
+}
+
+@Composable
+fun InfoRow(label: String, value: String) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
