@@ -26,8 +26,37 @@ import kotlinx.coroutines.launch
 fun DetailMonsterScreen(monster: Monster, navController: NavController) {
     var isFavorite by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Konfirmasi Berburu") },
+            text = { Text("Apakah Anda yakin ingin mulai berburu ${monster.nama}? Pastikan persiapan sudah matang!") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showConfirmDialog = false
+                        coroutineScope.launch {
+                            isLoading = true
+                            delay(2500)
+                            isLoading = false
+                            snackbarHostState.showSnackbar("Berhasil! Anda telah mengalahkan ${monster.nama}")
+                        }
+                    }
+                ) {
+                    Text("Ya, Berburu!")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -128,14 +157,7 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                isLoading = true
-                                delay(2000)
-                                snackbarHostState.showSnackbar("Monster ${monster.nama} siap dihunt!")
-                                isLoading = false
-                            }
-                        },
+                        onClick = { showConfirmDialog = true },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isLoading,
                         shape = RoundedCornerShape(10.dp),
@@ -150,10 +172,10 @@ fun DetailMonsterScreen(monster: Monster, navController: NavController) {
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Memproses...")
+                            Text(text = "Sedang Bertarung...")
                         } else {
                             Text(
-                                text = "Hunt Monster!",
+                                text = "Lawan Monster!",
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }

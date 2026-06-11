@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +28,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.praktam_2407051018.model.Monster
 import com.example.praktam_2407051018.model.MonsterList
 import com.example.praktam_2407051018.ui.theme.PraktamTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -63,48 +66,102 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
 
 @Composable
 fun MonsterListScreen(navController: NavController) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Text(
-                text = "⚔️ Monster Hunter",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "${MonsterList.listMonster.size} monster ditemukan",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "🔥 Monster Populer",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+    var isLoading by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Simulasi loading saat aplikasi dibuka
+    LaunchedEffect(Unit) {
+        isLoading = true
+        delay(1500)
+        isLoading = false
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        isLoading = true
+                        delay(2000)
+                        isLoading = false
+                        snackbarHostState.showSnackbar("Daftar monster berhasil diperbarui!")
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                items(MonsterList.listMonster) { monster ->
-                    MonsterRowItem(monster = monster, navController = navController)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh")
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "📜 Semua Monster",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
         }
+    ) { innerPadding ->
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "Mencari monster...", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Text(
+                        text = "⚔️ Monster Hunter",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "${MonsterList.listMonster.size} monster ditemukan",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "🔥 Monster Populer",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(MonsterList.listMonster) { monster ->
+                            MonsterRowItem(monster = monster, navController = navController)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "📜 Semua Monster",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
 
-        items(MonsterList.listMonster) { monster ->
-            MonsterCard(monster = monster, navController = navController)
+                items(MonsterList.listMonster) { monster ->
+                    MonsterCard(monster = monster, navController = navController, snackbarHostState = snackbarHostState)
+                }
+            }
         }
     }
 }
@@ -147,8 +204,10 @@ fun MonsterRowItem(monster: Monster, navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MonsterCard(monster: Monster, navController: NavController) {
+fun MonsterCard(monster: Monster, navController: NavController, snackbarHostState: SnackbarHostState) {
     var isFavorite by remember { mutableStateOf(false) }
+    var isLoadingFav by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -171,18 +230,35 @@ fun MonsterCard(monster: Monster, navController: NavController) {
                     contentScale = ContentScale.Crop
                 )
                 IconButton(
-                    onClick = { isFavorite = !isFavorite },
+                    onClick = {
+                        coroutineScope.launch {
+                            isLoadingFav = true
+                            delay(1000)
+                            isFavorite = !isFavorite
+                            isLoadingFav = false
+                            val message = if (isFavorite) "Ditambahkan ke favorit!" else "Dihapus dari favorit!"
+                            snackbarHostState.showSnackbar(message)
+                        }
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                        .padding(8.dp),
+                    enabled = !isLoadingFav
                 ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Filled.Favorite
-                        else Icons.Outlined.FavoriteBorder,
-                        contentDescription = null,
-                        tint = if (isFavorite) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onBackground
-                    )
+                    if (isLoadingFav) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Filled.Favorite
+                            else Icons.Outlined.FavoriteBorder,
+                            contentDescription = null,
+                            tint = if (isFavorite) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
             }
 
