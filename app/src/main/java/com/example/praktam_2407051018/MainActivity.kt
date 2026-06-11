@@ -19,23 +19,50 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.praktam_2407051018.model.Monster
 import com.example.praktam_2407051018.model.MonsterList
 import com.example.praktam_2407051018.ui.theme.PraktamTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             PraktamTheme {
-                MonsterListScreen()
+                val navController = rememberNavController()
+                AppNavigation(navController)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppNavigation(navController: androidx.navigation.NavHostController) {
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        composable("home") {
+            MonsterListScreen(navController)
+        }
+        composable("detail/{nama}") { backStackEntry: NavBackStackEntry ->
+            val nama = backStackEntry.arguments?.getString("nama")
+            val monster = MonsterList.listMonster.find { it.nama == nama }
+            if (monster != null) {
+                DetailMonsterScreen(monster = monster, navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun MonsterListScreen() {
+fun MonsterListScreen(navController: NavController) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -44,38 +71,31 @@ fun MonsterListScreen() {
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
         item {
             Text(
                 text = "⚔️ Monster Hunter",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary
             )
-
             Text(
                 text = "${MonsterList.listMonster.size} monster ditemukan",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
             Text(
                 text = "🔥 Monster Populer",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
-
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(MonsterList.listMonster) { monster ->
-                    MonsterRowItem(monster)
+                    MonsterRowItem(monster = monster, navController = navController)
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 text = "📜 Semua Monster",
                 style = MaterialTheme.typography.titleMedium,
@@ -84,19 +104,21 @@ fun MonsterListScreen() {
         }
 
         items(MonsterList.listMonster) { monster ->
-            MonsterCard(monster)
+            MonsterCard(monster = monster, navController = navController)
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MonsterRowItem(monster: Monster) {
+fun MonsterRowItem(monster: Monster, navController: NavController) {
     Card(
         modifier = Modifier.width(140.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
-        )
+        ),
+        onClick = { navController.navigate("detail/${monster.nama}") }
     ) {
         Column {
             Image(
@@ -107,14 +129,12 @@ fun MonsterRowItem(monster: Monster) {
                     .height(100.dp),
                 contentScale = ContentScale.Crop
             )
-
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
                     text = monster.nama,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-
                 Text(
                     text = "LVL ${monster.level}",
                     style = MaterialTheme.typography.bodySmall,
@@ -125,8 +145,9 @@ fun MonsterRowItem(monster: Monster) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MonsterCard(monster: Monster) {
+fun MonsterCard(monster: Monster, navController: NavController) {
     var isFavorite by remember { mutableStateOf(false) }
 
     Card(
@@ -135,10 +156,10 @@ fun MonsterCard(monster: Monster) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        onClick = { navController.navigate("detail/${monster.nama}") }
     ) {
         Column {
-
             Box {
                 Image(
                     painter = painterResource(id = monster.gambar),
@@ -149,7 +170,6 @@ fun MonsterCard(monster: Monster) {
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                     contentScale = ContentScale.Crop
                 )
-
                 IconButton(
                     onClick = { isFavorite = !isFavorite },
                     modifier = Modifier
@@ -157,47 +177,36 @@ fun MonsterCard(monster: Monster) {
                         .padding(8.dp)
                 ) {
                     Icon(
-                        imageVector = if (isFavorite)
-                            Icons.Filled.Favorite
-                        else
-                            Icons.Outlined.FavoriteBorder,
+                        imageVector = if (isFavorite) Icons.Filled.Favorite
+                        else Icons.Outlined.FavoriteBorder,
                         contentDescription = null,
-                        tint = if (isFavorite)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onBackground
+                        tint = if (isFavorite) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
             Column(modifier = Modifier.padding(16.dp)) {
-
                 Text(
                     text = monster.nama,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-
                 Spacer(modifier = Modifier.height(6.dp))
-
                 Text(
                     text = "📍 ${monster.lokasi}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
-
                 Spacer(modifier = Modifier.height(6.dp))
-
                 Text(
                     text = "Level ${monster.level}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
-
                 Spacer(modifier = Modifier.height(12.dp))
-
                 Button(
-                    onClick = { },
+                    onClick = { navController.navigate("detail/${monster.nama}") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -218,6 +227,7 @@ fun MonsterCard(monster: Monster) {
 @Composable
 fun PreviewApp() {
     PraktamTheme {
-        MonsterListScreen()
+        val navController = rememberNavController()
+        MonsterListScreen(navController)
     }
 }
