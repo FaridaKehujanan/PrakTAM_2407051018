@@ -24,6 +24,7 @@ import com.example.praktam_2407051018.data.model.MonsterApiModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// buat nampilin detail monster pas diklik dari list
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailMonsterScreen(
@@ -37,8 +38,8 @@ fun DetailMonsterScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // munculin pop-up konfirmasi berburu
     if (showConfirmDialog) {
-// ... (rest of the code unchanged)
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
             title = { Text("Konfirmasi Berburu") },
@@ -49,7 +50,7 @@ fun DetailMonsterScreen(
                         showConfirmDialog = false
                         coroutineScope.launch {
                             isLoading = true
-                            delay(2500)
+                            delay(2500) // pura-puranya lagi gelut
                             isLoading = false
                             snackbarHostState.showSnackbar("Berhasil! Anda telah mengalahkan ${monster.name}")
                         }
@@ -71,6 +72,7 @@ fun DetailMonsterScreen(
             TopAppBar(
                 title = { Text(text = monster.name) },
                 navigationIcon = {
+                    // tombol buat balik ke halaman sebelumnya
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
@@ -94,6 +96,7 @@ fun DetailMonsterScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Box {
+                    // gambar gedenya monsternya
                     AsyncImage(
                         model = serpImageUrl ?: monster.imageUrl,
                         contentDescription = monster.name,
@@ -105,6 +108,7 @@ fun DetailMonsterScreen(
                         contentScale = ContentScale.Crop,
                         error = painterResource(id = android.R.drawable.ic_menu_report_image)
                     )
+                    // tombol love di pojok gambar
                     IconButton(
                         onClick = { isFavorite = !isFavorite },
                         modifier = Modifier
@@ -122,6 +126,7 @@ fun DetailMonsterScreen(
                 }
 
                 Column(modifier = Modifier.padding(24.dp)) {
+                    // nama monsternya pake font gede
                     Text(
                         text = monster.name,
                         style = MaterialTheme.typography.headlineMedium,
@@ -131,6 +136,7 @@ fun DetailMonsterScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // kotak info detail monsternya
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -153,6 +159,7 @@ fun DetailMonsterScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
+                    // tombol buat simulasi lawan monster
                     Button(
                         onClick = { showConfirmDialog = true },
                         modifier = Modifier
@@ -184,6 +191,7 @@ fun DetailMonsterScreen(
                 }
             }
             
+            // snackbar buat munculin notif hasil berburu
             SnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
@@ -194,6 +202,7 @@ fun DetailMonsterScreen(
     }
 }
 
+// komponen kecil buat nampilin baris info (misal: Lokasi: Rakau Plains)
 @Composable
 fun InfoRow(label: String, value: String) {
     Column {
